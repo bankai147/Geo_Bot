@@ -4,6 +4,7 @@ from picarta import Picarta
 import os
 from datetime import datetime
 from dotenv import load_dotenv
+from pathlib import Path
 load_dotenv()
 # Hidden API keys
 TG_API_KEY = os.getenv("TG_API_KEY")
@@ -17,8 +18,9 @@ localizer = Picarta(GEO_API_KEY)
 left_requests = 100
 
 # Folder for saving photos
-SAVE_DIR = "photos"
-os.makedirs(SAVE_DIR, exist_ok=True)
+desktop_path = Path.home() / "Desktop"
+SAVE_DIR = desktop_path / "TelegramBotPhotos"
+SAVE_DIR.mkdir(parents=True, exist_ok=True)
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -26,7 +28,7 @@ def start(message):
     btn1 = types.KeyboardButton('/help')
     markup.row(btn1)
     bot.send_message(message.chat.id,
-                     f'Hello, {message.from_user.first_name}!\nI am a bot that can help you with various tasks.\nType /help to see what I can do.',
+                     f'Hello, {message.from_user.first_name}!\nI am a bot that can help you with finding location where photo was taken.\nSend me a photo and I will try to find location.',
                      reply_markup=markup)
 
 @bot.message_handler(content_types=['photo'])
@@ -71,5 +73,7 @@ def handle_photo(message):
 
     except Exception as e:
         bot.send_message(message.chat.id, f"⚠️ Error: {e}")
+
+bot.remove_webhook()
 
 bot.polling(none_stop=True)
