@@ -4,18 +4,18 @@ from picarta import Picarta
 import os
 from datetime import datetime
 
-# API ключи
+# API keys
 TG_API_KEY = '7507293866:AAEkZU-wm7IFeGKRbwy3uf10nb11JeZHga0'
 GEO_API_KEY = 'RVMCGTHQP4Z4A3IFWF3S'
 
-# Инициализация бота и Picarta
+# Initialize bot and Picarta
 bot = telebot.TeleBot(TG_API_KEY)
 localizer = Picarta(GEO_API_KEY)
 
-# Количество оставшихся запросов
+# Number of remaining requests
 left_requests = 100
 
-# Папка для сохранения фото
+# Folder for saving photos
 SAVE_DIR = "photos"
 os.makedirs(SAVE_DIR, exist_ok=True)
 
@@ -32,7 +32,7 @@ def start(message):
 def handle_photo(message):
     global left_requests
     try:
-        bot.send_message(message.chat.id, "📷 Фото получено, обрабатываю...")
+        bot.send_message(message.chat.id, "📷 Photo received, processing...")
 
         file_info = bot.get_file(message.photo[-1].file_id)
         downloaded_file = bot.download_file(file_info.file_path)
@@ -40,15 +40,15 @@ def handle_photo(message):
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_path = os.path.join(SAVE_DIR, f"photo_{timestamp}.jpg")
 
-        # Сохраняем фото в файл
+        # Save photo to file
         with open(file_path, "wb") as f:
             f.write(downloaded_file)
 
-        # Отправляем файл в Picarta
+        # Send file to Picarta
         scanned_location = localizer.localize(file_path)
 
         if not scanned_location:
-            bot.send_message(message.chat.id, "❌ Не удалось определить местоположение.")
+            bot.send_message(message.chat.id, "❌ Unable to determine location.")
             return
 
         top = scanned_location.get("topk_predictions_dict", {}).get("1", {})
@@ -57,18 +57,18 @@ def handle_photo(message):
         confidence = top.get("confidence", 0)
 
         response = (
-            f"🌍 Предположительно: {address.get('city', '???')}, "
+            f"🌍 Possibly: {address.get('city', '???')}, "
             f"{address.get('province', '')}, {address.get('country', '')}\n"
-            f"📍 Координаты: {gps}\n"
-            f"🔎 Уверенность: {confidence:.2%}"
+            f"📍 Coordinates: {gps}\n"
+            f"🔎 Confidence: {confidence:.2%}"
         )
 
         bot.send_message(message.chat.id, response)
 
         left_requests -= 1
-        bot.send_message(message.chat.id, f"🧾 Осталось запросов: {left_requests}")
+        bot.send_message(message.chat.id, f"🧾 Requests left: {left_requests}")
 
     except Exception as e:
-        bot.send_message(message.chat.id, f"⚠️ Ошибка: {e}")
+        bot.send_message(message.chat.id, f"⚠️ Error: {e}")
 
 bot.polling(none_stop=True)
