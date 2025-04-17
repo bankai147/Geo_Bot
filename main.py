@@ -3,10 +3,11 @@ from telebot import types
 from picarta import Picarta
 import os
 from datetime import datetime
-
-# API keys
-TG_API_KEY = '7507293866:AAEkZU-wm7IFeGKRbwy3uf10nb11JeZHga0'
-GEO_API_KEY = 'RVMCGTHQP4Z4A3IFWF3S'
+from dotenv import load_dotenv
+load_dotenv()
+# Hidden API keys
+TG_API_KEY = os.getenv("TG_API_KEY")
+GEO_API_KEY = os.getenv("GEO_API_KEY")
 
 # Initialize bot and Picarta
 bot = telebot.TeleBot(TG_API_KEY)
