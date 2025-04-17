@@ -3,19 +3,6 @@ from telebot import types
 from picarta import Picarta
 import os
 from datetime import datetime
-from dotenv import load_dotenv
-from pathlib import Path
-load_dotenv()
-# Hidden API keys
-TG_API_KEY = os.getenv("TG_API_KEY")
-GEO_API_KEY = os.getenv("GEO_API_KEY")
-
-# Initialize bot and Picarta
-import telebot
-from telebot import types
-from picarta import Picarta
-import os
-from datetime import datetime
 
 # API keys
 TG_API_KEY = '7507293866:AAEkZU-wm7IFeGKRbwy3uf10nb11JeZHga0'
@@ -64,26 +51,26 @@ def handle_photo(message):
         with open(file_path, "wb") as f:
             f.write(downloaded_file)
 
-        # Send file to Picarta
-        scanned_location = localizer.localize(file_path)
+        # Send file to Picarta requesting top 5 results
+        scanned_location = localizer.localize(file_path, top_k=5)
 
-        if not scanned_location:
+        results = scanned_location.get("topk_predictions_dict", {})
+        if not results:
             bot.send_message(message.chat.id, "❌ Unable to determine location.")
             return
 
-        top = scanned_location.get("topk_predictions_dict", {}).get("1", {})
-        address = top.get("address", {})
-        gps = top.get("gps", [])
-        confidence = top.get("confidence", 0)
+        for rank, prediction in results.items():
+            address = prediction.get("address", {})
+            gps = prediction.get("gps", [])
+            confidence = prediction.get("confidence", 0)
 
-        response = (
-            f"🌍 Possibly: {address.get('city', '???')}, "
-            f"{address.get('province', '')}, {address.get('country', '')}\n"
-            f"📍 Coordinates: {gps}\n"
-            f"🔎 Confidence: {confidence:.2%}"
-        )
-
-        bot.send_message(message.chat.id, response)
+            response = (
+                f"#{rank} 🌍 {address.get('city', '???')}, "
+                f"{address.get('province', '')}, {address.get('country', '')}\n"
+                f"📍 Coordinates: {gps}\n"
+                f"🔎 Confidence: {confidence:.2%}"
+            )
+            bot.send_message(message.chat.id, response)
 
         # Decrease request counter and save to file
         left_requests -= 1
