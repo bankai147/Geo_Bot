@@ -11,16 +11,33 @@ TG_API_KEY = os.getenv("TG_API_KEY")
 GEO_API_KEY = os.getenv("GEO_API_KEY")
 
 # Initialize bot and Picarta
+import telebot
+from telebot import types
+from picarta import Picarta
+import os
+from datetime import datetime
+
+# API keys
+TG_API_KEY = '7507293866:AAEkZU-wm7IFeGKRbwy3uf10nb11JeZHga0'
+GEO_API_KEY = 'RVMCGTHQP4Z4A3IFWF3S'
+
+# Initialize bot and Picarta
 bot = telebot.TeleBot(TG_API_KEY)
 localizer = Picarta(GEO_API_KEY)
 
-# Number of remaining requests
-left_requests = 100
+# Path to request counter file
+REQUEST_FILE = "requests_left.txt"
+
+# Load remaining requests from file or initialize
+if os.path.exists(REQUEST_FILE):
+    with open(REQUEST_FILE, "r") as f:
+        left_requests = int(f.read())
+else:
+    left_requests = 100
 
 # Folder for saving photos
-desktop_path = Path.home() / "Desktop"
-SAVE_DIR = desktop_path / "TelegramBotPhotos"
-SAVE_DIR.mkdir(parents=True, exist_ok=True)
+SAVE_DIR = "photos"
+os.makedirs(SAVE_DIR, exist_ok=True)
 
 @bot.message_handler(commands=['start'])
 def start(message):
@@ -28,7 +45,7 @@ def start(message):
     btn1 = types.KeyboardButton('/help')
     markup.row(btn1)
     bot.send_message(message.chat.id,
-                     f'Hello, {message.from_user.first_name}!\nI am a bot that can help you with finding location where photo was taken.\nSend me a photo and I will try to find location.',
+                     f'Hello, {message.from_user.first_name}!\nI am a bot that can help you with various tasks.\nType /help to see what I can do.',
                      reply_markup=markup)
 
 @bot.message_handler(content_types=['photo'])
@@ -68,12 +85,16 @@ def handle_photo(message):
 
         bot.send_message(message.chat.id, response)
 
+        # Decrease request counter and save to file
         left_requests -= 1
+        with open(REQUEST_FILE, "w") as f:
+            f.write(str(left_requests))
+
         bot.send_message(message.chat.id, f"🧾 Requests left: {left_requests}")
 
     except Exception as e:
         bot.send_message(message.chat.id, f"⚠️ Error: {e}")
 
+# Remove webhook if any, then start polling
 bot.remove_webhook()
-
 bot.polling(none_stop=True)
