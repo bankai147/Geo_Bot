@@ -28,12 +28,37 @@ os.makedirs(SAVE_DIR, exist_ok=True)
 
 @bot.message_handler(commands=['start'])
 def start(message):
-    markup = types.ReplyKeyboardMarkup()
-    btn1 = types.KeyboardButton('/help')
-    markup.row(btn1)
-    bot.send_message(message.chat.id,
-                     f'Hello, {message.from_user.first_name}!\nI am a bot that can help you with various tasks.\nType /help to see what I can do.',
-                     reply_markup=markup)
+    keyboard = types.InlineKeyboardMarkup()
+    help_button = types.InlineKeyboardButton("Help", callback_data="help")
+    keyboard.add(help_button)
+
+    bot.send_message(
+        message.chat.id,
+        f"Hello, {message.from_user.first_name}!\nI am a bot that can help you with various tasks.",
+        reply_markup=keyboard
+    )
+
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback(call):
+    if call.data == "features":
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id,
+                         "I can analyze your photo and predict where it was taken using Picarta AI.\nJust send me a photo.")
+    elif call.data == "instructions":
+        bot.answer_callback_query(call.id)
+        bot.send_message(call.message.chat.id,
+                         "1. Send me a photo.\n2. Wait for the results.\n3. I will return 5 possible locations.")
+    elif call.data == "help":
+        bot.answer_callback_query(call.id)
+        text = "Here are some things I can do:"
+        keyboard = types.InlineKeyboardMarkup()
+        btn1 = types.InlineKeyboardButton("What can you do?", callback_data="features")
+        btn2 = types.InlineKeyboardButton("How to use it?", callback_data="instructions")
+        keyboard.add(btn1, btn2)
+        bot.send_message(call.message.chat.id, text, reply_markup=keyboard)
+
 
 @bot.message_handler(content_types=['photo'])
 def handle_photo(message):
