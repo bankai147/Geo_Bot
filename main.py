@@ -105,6 +105,7 @@ def handle_help_click(call):
             reply_markup=keyboard
         )
 
+
     if call.data == "features":
         bot.send_message(call.message.chat.id,
                          "I can analyze your photo and predict where it was taken using Picarta AI.\nJust send me a photo.")
