@@ -1,0 +1,3 @@
+pyTelegramBotAP  
+python-dotenv
+Picarta
