@@ -12,7 +12,7 @@ load_dotenv()
 # API keys
 TG_API_KEY = os.getenv("Telegram-Bot_API")
 
-GEO_API_KEY = 'Picarta_API'
+GEO_API_KEY = os.getenv('Picarta_API')
 
 # Initialize bot and Picarta
 bot = telebot.TeleBot(TG_API_KEY)
@@ -62,7 +62,6 @@ def handle_photo(message):
 
         # Send file to Picarta (top 5 predictions)
         scanned_location = localizer.localize(str(file_path), top_k=5)
-
         results = scanned_location.get("topk_predictions_dict", {})
         if not results:
             bot.send_message(message.chat.id, "Unable to determine location.")
